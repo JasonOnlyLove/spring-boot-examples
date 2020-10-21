@@ -51,21 +51,21 @@
         </li>
 
         <li class="page-item" th:if="${pageInfo.hasPreviousPage}">
-            <a class="page-link" th:href="'/list?pageNum='+${pageInfo.getPrePage()}">上一页</a>
+            <a class="page-link" th:href="'/list?pageNum='+${pageInfo.prePage}">上一页</a>
         </li>
         <li class="page-item disabled" th:if="${not pageInfo.hasPreviousPage}">
-            <a class="page-link" th:href="'/list?pageNum='+${pageInfo.getPrePage()}">上一页</a>
+            <a class="page-link" th:href="'/list?pageNum='+${pageInfo.prePage}">上一页</a>
         </li>
         <!--遍历条数-->
-        <li th:each="nav:${pageInfo.navigatepageNums}">
-        <li th:if="${nav != pageInfo.pageNum}" class="=page-item">
-            <a class="page-link" th:href="'/list?pageNum='+${nav}" th:text="${nav}"
-            ></a>
-        </li>
-        <li th:if="${nav == pageInfo.pageNum}" class="page-item active">
-            <a class="page-link" th:text="${nav}"></a>
-        </li>
-        </li>
+        <div th:each="nav:${pageInfo.navigatepageNums}">
+            <li th:if="${nav != pageInfo.pageNum}" class="page-item">
+                <a class="page-link" th:href="'/list?pageNum='+${nav}" th:text="${nav}"
+                ></a>
+            </li>
+            <li th:if="${nav == pageInfo.pageNum}" class="page-item active">
+                <a class="page-link" th:text="${nav}"></a>
+            </li>
+        </div>
         <li class="page-item" th:if="${pageInfo.hasNextPage}">
             <a class="page-link" th:href="'/list?pageNum='+${pageInfo.nextPage}">
                 下一页
@@ -83,6 +83,147 @@
             <a class="page-link" th:href="'/list?pageNum='+${pageInfo.pages}">尾页</a>
         </li>
     </ul>
+
+    <nav data-th-fragment="page" data-th-if="${pageInfo.pages gt 0}" data-th-object="${pageInfo}">
+        <!-- 处理页数小于等于7 的情况 -->
+        <ul class="pagination" data-th-if="${pageInfo.pages le 7}">
+            <!-- 总记录数 -->
+            <li class="tbpage-total-elements disabled">共[[${pageInfo.total}]]条</li>
+
+            <!-- 页面大小 -->
+            <select class="custom-select tbpage-size" data-th-attr="pageIndex=${pageInfo.pageNum}">
+                <option data-th-each="i : ${#arrays.toIntegerArray({5,10,40,100})}" data-th-value="${i}"
+                        data-th-selected="${i eq pageInfo.pageSize}" data-th-text="${i}"></option>
+            </select>
+
+            <!-- 上一页 -->
+            <li class="page-item" data-th-classappend="*{isFirstPage} ? 'disabled' : ''">
+                <a th:href="'/list?pageNum='+${pageInfo.prePage}" class="page-link tbpage-item"
+                   data-th-attr="pageIndex=${pageInfo.pages}"
+                   aria-label="Previous">
+                    <span aria-hidden="true">«</span>
+                </a>
+            </li>
+
+            <!-- 迭代生成页码 -->
+            <li class="page-item" data-th-each="i : ${#numbers.sequence(1, pageInfo.pages)}"
+                data-th-classappend="${pageInfo.pageNum eq i} ? 'active' : ''">
+                <a class="page-link tbpage-item" data-th-attr="pageIndex=${i} - 1"
+                   th:href="'/list?pageNum='+${i}">
+                    <span data-th-text="${i}"></span>
+                </a>
+            </li>
+
+            <!-- 下一页 -->
+            <li class="page-item" data-th-classappend="*{isLastPage} ? 'disabled' : ''">
+                <a th:href="'/list?pageNum='+${pageInfo.nextPage}" class="page-link tbpage-item"
+                   data-th-attr="pageIndex=${pageInfo.nextPage}"
+                   aria-label="Next">
+                    <span aria-hidden="true">»</span>
+                </a>
+            </li>
+        </ul>
+        <!-- 处理页数大于7 的情况 -->
+        <ul class="pagination" data-th-if="${pageInfo.pages gt 7}">
+            <!-- 总记录数 -->
+            <li class="tbpage-total-elements disabled">共[[${pageInfo.total}]]条</li>
+
+            <!-- 页面大小 -->
+            <select class="custom-select tbpage-size" data-th-attr="pageIndex=${pageInfo.pageNum}">
+                <option data-th-each="i : ${#arrays.toIntegerArray({5,10,40,100})}" data-th-value="${i}"
+                        data-th-selected="${i eq pageInfo.pageSize}" data-th-text="${i}"></option>
+            </select>
+
+            <!-- 上一页 -->
+            <li class="page-item" data-th-classappend="*{isFirstPage} ? 'disabled' : ''">
+                <a th:href="'/list?pageNum='+${pageInfo.prePage}" class="page-link tbpage-item"
+                   data-th-attr="pageIndex=${pageInfo.pages}"
+                   aria-label="Previous">
+                    <span aria-hidden="true">«</span>
+                </a>
+            </li>
+
+            <!-- 首页 -->
+            <li class="page-item" data-th-classappend="${pageInfo.pageNum eq 1} ? 'active' : ''">
+                <a th:href="'/list?pageNum=1'" class="page-link tbpage-item" data-th-attr="pageIndex=1">1</a>
+            </li>
+
+
+            <!-- 当前页面小于等于4 -->
+            <li class="page-item" data-th-if="${pageInfo.pageNum le 4}"
+                data-th-each="i : ${#numbers.sequence(2,5)}"
+                data-th-classappend="${pageInfo.pageNum eq i} ? 'active' : ''">
+                <a class="page-link tbpage-item" th:href="'/list?pageNum='+${i}" data-th-attr="pageIndex=${i}">
+                    <span data-th-text="${i}"></span>
+                </a>
+            </li>
+
+            <li class="page-item disabled" data-th-if="${pageInfo.pageNum le 4}">
+                <a href="javascript:void(0);" class="page-link tbpage-item">
+                    <span aria-hidden="true">...</span>
+                </a>
+            </li>
+
+            <!-- 最后一页与当前页面之差，小于等于3 -->
+            <li class="page-item disabled" data-th-if="${(pageInfo.pages -pageInfo.pageNum) le 3}">
+                <a href="javascript:void(0);" class="page-link tbpage-item">
+                    <span aria-hidden="true">...</span>
+                </a>
+            </li>
+            <li class="page-item" data-th-if="${(pageInfo.pages -pageInfo.pageNum) le 3}"
+                data-th-each="i : ${#numbers.sequence(pageInfo.pages -4, pageInfo.pages -1)}"
+                data-th-classappend="${pageInfo.pageNum  eq i} ? 'active' : ''">
+                <a class="page-link tbpage-item" th:href="'/list?pageNum='+${i}"
+                   data-th-attr="pageIndex=${i}">
+                    <span data-th-text="${i}"></span>
+                </a>
+            </li>
+
+            <!-- 最后一页与当前页面之差大于3，且当前页面大于4-->
+
+            <li class="page-item disabled"
+                data-th-if="${(pageInfo.pageNum gt 4) && ((pageInfo.pages -pageInfo.pageNum) gt 3 )}">
+                <a href="javascript:void(0);" class="page-link tbpage-item">
+                    <span aria-hidden="true">...</span>
+                </a>
+            </li>
+            <li class="page-item active"
+                data-th-if="${(pageInfo.pageNum gt 4) && ((pageInfo.pages -pageInfo.pageNum) gt 3 )}">
+                <a th:href="'/list?pageNum='+${pageInfo.pageNum}" class="page-link tbpage-item"
+                   data-th-attr="pageIndex=${pageInfo.pageNum}">[[${pageInfo.pageNum}]]</a>
+            </li>
+            <li class="page-item"
+                data-th-if="${(pageInfo.pageNum gt 4) && ((pageInfo.pages -pageInfo.pageNum) gt 3 )}">
+                <a th:href="'/list?pageNum='+${pageInfo.pageNum+1}" class="page-link tbpage-item"
+                   data-th-attr="pageIndex=${pageInfo.pageNum} + 1">[[${pageInfo.pageNum
+                    + 1}]]</a>
+            </li>
+
+            <li class="page-item disabled"
+                data-th-if="${(pageInfo.pageNum gt 4) && ((pageInfo.pages -pageInfo.pageNum ) gt 3 )}">
+                <a href="javascript:void(0);" class="page-link tbpage-item">
+                    <span aria-hidden="true">...</span>
+                </a>
+            </li>
+
+            <!-- 最后一页 -->
+            <li class="page-item"
+                data-th-classappend="${pageInfo.pageNum eq pageInfo.pages} ? 'active' : ''">
+                <a th:href="'/list?pageNum='+${pageInfo.pages}" class="page-link tbpage-item"
+                   data-th-attr="pageIndex=${pageInfo.pages}">[[${pageInfo.pages}]]</a>
+            </li>
+
+            <!-- 下一页 -->
+            <li class="page-item" data-th-classappend="*{isLastPage} ? 'disabled' : ''">
+                <a th:href="'/list?pageNum='+${pageInfo.nextPage}" class="page-link tbpage-item"
+                   data-th-attr="pageIndex=${pageInfo.nextPage}"
+                   aria-label="Next">
+                    <span aria-hidden="true">»</span>
+                </a>
+            </li>
+        </ul>
+
+    </nav>
 </div>
 </body>
 </html>
